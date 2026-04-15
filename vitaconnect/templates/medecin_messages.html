@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Messages — VitaConnect{% endblock %}
+{% block body %}
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sb-brand"><div class="sb-name">Vita<span>Connect</span></div><div class="sb-role">Espace Médecin</div></div>
+    <nav class="nav">
+      <a class="nav-item" href="/medecin"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Tableau de bord</a>
+      <a class="nav-item" href="/medecin/patients"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Mes patients</a>
+      <a class="nav-item" href="/medecin/alertes"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>Alertes</a>
+      <a class="nav-item active" href="/medecin/messages"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</a>
+    </nav>
+    <div class="sb-foot"><div class="sb-user">{{ session.nom }}</div><a class="logout" href="/logout">Déconnexion</a></div>
+  </aside>
+  <main class="main fade">
+    <div class="ph"><h1>Messages</h1><p>Vos échanges avec les patients</p></div>
+    <div class="g2">
+      <div class="card" style="height:fit-content">
+        <div class="card-h"><h2>Patients</h2></div>
+        {% for p in patients_list %}
+        <a href="/medecin/messages?patient={{ p.uid }}">
+          <div class="pat-row {{ 'active' if p.uid == selected_uid else '' }}" style="{{ 'border-color:var(--mint);background:var(--mint-light)' if p.uid == selected_uid else '' }}">
+            <div class="avatar">{{ p.prenom[0] }}{{ p.nom[0] }}</div>
+            <div class="pat-info">
+              <div class="pat-name">{{ p.prenom }} {{ p.nom }}</div>
+              <div class="pat-sub">Patient</div>
+            </div>
+            {% if p.non_lus > 0 %}<span class="badge b-r">{{ p.non_lus }}</span>{% endif %}
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      <div class="card">
+        {% if selected_patient %}
+        <div class="card-h"><h2>{{ selected_patient.prenom }} {{ selected_patient.nom }}</h2></div>
+        <div class="thread" id="thread">
+          {% for msg in messages %}
+          <div class="msg {{ 'msg-me' if msg.expediteur_id == session.user_id else 'msg-other' }}">
+            {{ msg.contenu }}
+            <div class="msg-time">{{ msg.created_at[:16] }}</div>
+          </div>
+          {% endfor %}
+          {% if not messages %}<div style="text-align:center;padding:2rem;color:var(--gray)">Aucun message avec ce patient.</div>{% endif %}
+        </div>
+        <form method="POST" class="msg-row">
+          <input type="hidden" name="destinataire_id" value="{{ selected_uid }}">
+          <input class="msg-inp" type="text" name="contenu" placeholder="Votre réponse au patient..." required>
+          <button type="submit" class="btn btn-p">Envoyer</button>
+        </form>
+        {% else %}
+        <div style="text-align:center;padding:3rem;color:var(--gray)">Sélectionnez un patient pour voir la conversation.</div>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+</div>
+<script>const t = document.getElementById('thread'); if(t) t.scrollTop = 99999;</script>
+{% endblock %}

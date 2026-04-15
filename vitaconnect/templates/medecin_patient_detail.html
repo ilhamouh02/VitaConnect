@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Dossier patient — VitaConnect{% endblock %}
+{% block body %}
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sb-brand"><div class="sb-name">Vita<span>Connect</span></div><div class="sb-role">Espace Médecin</div></div>
+    <nav class="nav">
+      <a class="nav-item" href="/medecin"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Tableau de bord</a>
+      <a class="nav-item active" href="/medecin/patients"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Mes patients</a>
+      <a class="nav-item" href="/medecin/alertes"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>Alertes</a>
+      <a class="nav-item" href="/medecin/messages"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</a>
+    </nav>
+    <div class="sb-foot"><div class="sb-user">{{ session.nom }}</div><a class="logout" href="/logout">Déconnexion</a></div>
+  </aside>
+  <main class="main fade">
+    <div style="margin-bottom:1rem"><a href="/medecin/patients" style="color:var(--mint);font-size:0.87rem">← Retour à la liste</a></div>
+    <div class="ph"><h1>{{ patient.prenom }} {{ patient.nom }}</h1><p>{{ patient.pathologie or 'Pathologie non précisée' }} · {{ patient.date_naissance or 'Date de naissance non renseignée' }}</p></div>
+    <div class="g2" style="margin-bottom:1.25rem">
+      <div class="card">
+        <div class="card-h"><h2>Informations patient</h2></div>
+        <table style="font-size:0.88rem;width:100%">
+          <tr><td style="color:var(--gray);padding:4px 0;width:120px">Nom complet</td><td><strong>{{ patient.prenom }} {{ patient.nom }}</strong></td></tr>
+          <tr><td style="color:var(--gray);padding:4px 0">Email</td><td>{{ patient.email }}</td></tr>
+          <tr><td style="color:var(--gray);padding:4px 0">Naissance</td><td>{{ patient.date_naissance or '—' }}</td></tr>
+          <tr><td style="color:var(--gray);padding:4px 0">Pathologie</td><td>{{ patient.pathologie or '—' }}</td></tr>
+          <tr><td style="color:var(--gray);padding:4px 0">Mesures totales</td><td>{{ mesures|length }}</td></tr>
+        </table>
+        <div class="sep"></div>
+        <a href="/medecin/messages?patient={{ patient.utilisateur_id }}" class="btn btn-o btn-full"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Envoyer un message</a>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Alertes récentes</h2></div>
+        {% for a in alertes %}
+        <div class="notif {{ 'notif-r' if not a.traitee else 'notif-g' }}" style="margin-bottom:0.5rem">
+          <div class="notif-ico">{% if not a.traitee %}<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>{% else %}<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>{% endif %}</div>
+          <div class="notif-b">
+            <div class="notif-t">{{ a.type_alerte|capitalize }} : {{ a.valeur }}</div>
+            <div class="notif-d">{{ a.date_alerte[:16] }} · Seuil : {{ a.seuil }}</div>
+          </div>
+        </div>
+        {% endfor %}
+        {% if not alertes %}<div style="font-size:0.87rem;color:var(--gray);display:flex;align-items:center;gap:0.4rem"><svg width="15" height="15" fill="none" stroke="var(--green)" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Aucune alerte pour ce patient.</div>{% endif %}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Historique des mesures</h2></div>
+      <div class="tw"><table>
+        <thead><tr><th>Date</th><th>Heure</th><th>Tension</th><th>Pouls</th><th>Glycémie</th><th>Poids</th><th>Statut</th><th>Note</th></tr></thead>
+        <tbody>
+          {% for m in mesures %}
+          <tr style="{% if m.statut in ['critique','elevee'] %}background:var(--red-light){% endif %}">
+            <td>{{ m.date_mesure }}</td><td>{{ m.heure_mesure }}</td>
+            <td>{% if m.tension_sys %}<strong class="{{ 'c-r' if m.statut in ['critique','elevee'] else '' }}">{{ m.tension_sys }}/{{ m.tension_dia }}</strong>{% else %}—{% endif %}</td>
+            <td>{{ m.pouls or '—' }}</td>
+            <td>{{ m.glycemie or '—' }}{% if m.glycemie %} g/L{% endif %}</td>
+            <td>{{ m.poids or '—' }}{% if m.poids %} kg{% endif %}</td>
+            <td>{% if m.statut == 'normale' %}<span class="badge b-g">Normale</span>{% elif m.statut in ['critique','elevee'] %}<span class="badge b-r">Élevée</span>{% else %}<span class="badge b-a">Limite</span>{% endif %}</td>
+            <td style="font-size:0.8rem;color:var(--gray)">{{ m.note or '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table></div>
+    </div>
+  </main>
+</div>
+{% endblock %}

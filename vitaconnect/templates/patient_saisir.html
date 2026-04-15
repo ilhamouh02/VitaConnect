@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Saisir mes mesures — VitaConnect{% endblock %}
+{% block body %}
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sb-brand"><div class="sb-name">Vita<span>Connect</span></div><div class="sb-role">Espace Patient</div></div>
+    <nav class="nav">
+      <div class="nav-lbl">Menu</div>
+      <a class="nav-item" href="/patient"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Tableau de bord</a>
+      <a class="nav-item active" href="/patient/saisir"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Saisir mes mesures</a>
+      <a class="nav-item" href="/patient/historique"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Mon historique</a>
+      <a class="nav-item" href="/patient/messages"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</a>
+    </nav>
+    <div class="sb-foot"><div class="sb-user">{{ session.nom }}</div><a class="logout" href="/logout">Déconnexion</a></div>
+  </aside>
+
+  <main class="main fade">
+    <div class="ph">
+      <h1>Saisir mes mesures</h1>
+      <p>Prenez votre temps — ça prend moins de 30 secondes</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash flash-{{ 's' if cat == 'success' else 'e' }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="g2">
+        <div class="card">
+          <div class="card-h"><h2>Tension artérielle</h2></div>
+          <div class="g3" style="margin-bottom:1.25rem">
+            <div class="mbox">
+              <div class="mbox-lbl">Systolique</div>
+              <input class="fi fi-big" type="number" name="tension_sys" id="sys" placeholder="13" min="8" max="25" oninput="updateStatus()">
+              <div style="font-size:0.78rem;color:var(--gray);margin-top:0.25rem">cmHg</div>
+            </div>
+            <div class="mbox">
+              <div class="mbox-lbl">Diastolique</div>
+              <input class="fi fi-big" type="number" name="tension_dia" id="dia" placeholder="8" min="5" max="15" oninput="updateStatus()">
+              <div style="font-size:0.78rem;color:var(--gray);margin-top:0.25rem">cmHg</div>
+            </div>
+            <div class="mbox">
+              <div class="mbox-lbl">Pouls</div>
+              <input class="fi fi-big" type="number" name="pouls" placeholder="70" min="40" max="160">
+              <div style="font-size:0.78rem;color:var(--gray);margin-top:0.25rem">bpm</div>
+            </div>
+          </div>
+          <div id="tension-status" class="status-ok">
+            <div class="st-ico"><svg width="28" height="28" fill="none" stroke="var(--green)" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="st-txt">Entrez vos valeurs ci-dessus</div>
+            <div class="st-sub">Le résultat s'affichera automatiquement.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h2>Autres mesures</h2></div>
+          <div class="fg">
+            <label class="fl">Poids (kg)</label>
+            <input class="fi" type="number" name="poids" placeholder="Ex: 78.5" step="0.1" min="30" max="250">
+          </div>
+          <div class="fg">
+            <label class="fl">Glycémie (g/L) — si applicable</label>
+            <input class="fi" type="number" name="glycemie" placeholder="Ex: 1.1" step="0.01" min="0.5" max="5" oninput="updateStatus()">
+          </div>
+          <div class="fg">
+            <label class="fl">Note ou contexte (facultatif)</label>
+            <textarea class="fi" name="note" rows="3" placeholder="Ex: j'étais stressé ce matin, mauvaise nuit..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-p btn-full">Enregistrer mes mesures →</button>
+          <div style="font-size:0.78rem;color:var(--gray);margin-top:0.6rem;text-align:center">Votre médecin sera informé automatiquement si les valeurs sont anormales.</div>
+        </div>
+      </div>
+    </form>
+
+    <div class="card">
+      <div class="card-h"><h2>À quoi correspondent les seuils ?</h2></div>
+      <div class="g3">
+        <div class="status-ok" style="text-align:left">
+          <div style="font-weight:600;margin-bottom:0.35rem;font-size:0.9rem;display:flex;align-items:center;gap:0.4rem"><svg width="16" height="16" fill="none" stroke="var(--green)" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Normale</div>
+          <div style="font-size:0.83rem;color:var(--gray)">Systolique &lt; 140 mmHg<br>Diastolique &lt; 90 mmHg</div>
+        </div>
+        <div class="status-wa" style="text-align:left">
+          <div style="font-weight:600;margin-bottom:0.35rem;font-size:0.9rem;display:flex;align-items:center;gap:0.4rem"><svg width="16" height="16" fill="none" stroke="#E9A84A" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> À surveiller</div>
+          <div style="font-size:0.83rem;color:var(--gray)">Systolique 140–159 mmHg<br>Diastolique 90–99 mmHg</div>
+        </div>
+        <div class="status-hi" style="text-align:left">
+          <div style="font-weight:600;margin-bottom:0.35rem;font-size:0.9rem;display:flex;align-items:center;gap:0.4rem"><svg width="16" height="16" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Élevée</div>
+          <div style="font-size:0.83rem;color:var(--gray)">Systolique ≥ 160 mmHg<br>Diastolique ≥ 100 mmHg</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+function updateStatus() {
+  const sys = parseFloat(document.getElementById('sys').value) * 10 || 0;
+  const dia = parseFloat(document.getElementById('dia').value) * 10 || 0;
+  const box = document.getElementById('tension-status');
+  const svgOk = '<svg width="28" height="28" fill="none" stroke="var(--green)" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+  const svgWarn = '<svg width="28" height="28" fill="none" stroke="#E9A84A" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+  const svgAlert = '<svg width="28" height="28" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+  if (!sys && !dia) { box.className='status-ok'; box.innerHTML='<div class="st-ico">'+svgOk+'</div><div class="st-txt">Entrez vos valeurs ci-dessus</div><div class="st-sub">Le résultat s\'affichera automatiquement.</div>'; return; }
+  if (sys >= 160 || dia >= 110) { box.className='status-hi'; box.innerHTML='<div class="st-ico">'+svgAlert+'</div><div class="st-txt">Tension très élevée</div><div class="st-sub">Votre médecin sera alerté automatiquement. Si vous avez des symptômes, appelez le 15.</div>'; }
+  else if (sys >= 140 || dia >= 90) { box.className='status-wa'; box.innerHTML='<div class="st-ico">'+svgWarn+'</div><div class="st-txt">Tension un peu élevée</div><div class="st-sub">Votre médecin sera informé. Reposez-vous et évitez le stress.</div>'; }
+  else { box.className='status-ok'; box.innerHTML='<div class="st-ico">'+svgOk+'</div><div class="st-txt">Tension dans les seuils</div><div class="st-sub">Vos valeurs sont normales. Continuez à saisir régulièrement.</div>'; }
+}
+</script>
+{% endblock %}

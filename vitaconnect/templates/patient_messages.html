@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Messages — VitaConnect{% endblock %}
+{% block body %}
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sb-brand"><div class="sb-name">Vita<span>Connect</span></div><div class="sb-role">Espace Patient</div></div>
+    <nav class="nav">
+      <a class="nav-item" href="/patient"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Tableau de bord</a>
+      <a class="nav-item" href="/patient/saisir"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Saisir mes mesures</a>
+      <a class="nav-item" href="/patient/historique"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Mon historique</a>
+      <a class="nav-item active" href="/patient/messages"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</a>
+    </nav>
+    <div class="sb-foot"><div class="sb-user">{{ session.nom }}</div><a class="logout" href="/logout">Déconnexion</a></div>
+  </aside>
+  <main class="main fade">
+    <div class="ph"><h1>Messages</h1><p>Échange avec {% if medecin %}Dr. {{ medecin.nom }}{% else %}votre médecin{% endif %}</p></div>
+    <div class="card" style="max-width:700px">
+      {% if medecin %}<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--gray-light)">
+        <div class="avatar">{{ medecin.prenom[0] }}{{ medecin.nom[0] }}</div>
+        <div><div style="font-weight:600">Dr. {{ medecin.prenom }} {{ medecin.nom }}</div><div style="font-size:0.8rem;color:var(--gray)">Votre médecin traitant</div></div>
+        <span class="badge b-g" style="margin-left:auto">● En ligne</span>
+      </div>{% endif %}
+      <div class="thread" id="thread">
+        {% for msg in messages %}
+        <div class="msg {{ 'msg-me' if msg.expediteur_id == session.user_id else 'msg-other' }}">
+          {{ msg.contenu }}
+          <div class="msg-time">{{ msg.created_at[:16] }}</div>
+        </div>
+        {% endfor %}
+        {% if not messages %}
+        <div style="text-align:center;padding:2rem;color:var(--gray)">Aucun message. Envoyez votre premier message à votre médecin.</div>
+        {% endif %}
+      </div>
+      {% if medecin %}
+      <form method="POST" class="msg-row">
+        <input class="msg-inp" type="text" name="contenu" placeholder="Votre message au médecin..." required>
+        <button type="submit" class="btn btn-p">Envoyer</button>
+      </form>
+      <div style="font-size:0.77rem;color:var(--gray);margin-top:0.4rem">Le médecin répond généralement dans les 4 heures en journée.</div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+<script>document.getElementById('thread').scrollTop = 99999;</script>
+{% endblock %}

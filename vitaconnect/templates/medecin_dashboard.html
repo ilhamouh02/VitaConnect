@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord Médecin — VitaConnect{% endblock %}
+{% block body %}
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sb-brand"><div class="sb-name">Vita<span>Connect</span></div><div class="sb-role">Espace Médecin</div></div>
+    <nav class="nav">
+      <div class="nav-lbl">Menu</div>
+      <a class="nav-item active" href="/medecin"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Tableau de bord</a>
+      <a class="nav-item" href="/medecin/patients"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Mes patients{% if nb_patients %}<span class="badge b-gr" style="margin-left:auto">{{ nb_patients }}</span>{% endif %}</a>
+      <a class="nav-item" href="/medecin/alertes"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>Alertes{% if nb_alertes > 0 %}<span class="badge b-r" style="margin-left:auto">{{ nb_alertes }}</span>{% endif %}</a>
+      <a class="nav-item" href="/medecin/messages"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</a>
+    </nav>
+    <div class="sb-foot"><div class="sb-user">{{ session.nom }}</div><div class="sb-user-sub">Médecin généraliste</div><a class="logout" href="/logout">Déconnexion</a></div>
+  </aside>
+
+  <main class="main fade">
+    <div class="ph"><h1>Bonjour, Dr. {{ session.nom.split()[1] }}</h1><p>Vue d'ensemble de vos patients</p></div>
+
+    {% if alertes %}
+    <div class="notif notif-r">
+      <div class="notif-ico"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <div class="notif-b">
+        <div class="notif-t">{{ alertes|length }} alerte{% if alertes|length > 1 %}s{% endif %} active{% if alertes|length > 1 %}s{% endif %} nécessite{% if alertes|length == 1 %}nt{% endif %} votre attention</div>
+        <div class="notif-d">{% for a in alertes[:2] %}{{ a.prenom }} {{ a.nom }} : {{ a.type_alerte }} à {{ a.valeur }}{% if not loop.last %} · {% endif %}{% endfor %}</div>
+      </div>
+      <a href="/medecin/alertes" class="btn btn-r btn-sm" style="flex-shrink:0">Voir les alertes →</a>
+    </div>
+    {% endif %}
+
+    <div class="g4">
+      <div class="stat red">
+        <div class="stat-lbl">Alertes actives</div>
+        <div class="stat-val" style="color:var(--{{ 'red' if nb_alertes > 0 else 'ink' }})">{{ nb_alertes }}</div>
+        <div class="stat-sub" style="color:var(--red)">{{ 'À traiter' if nb_alertes > 0 else 'Aucune alerte' }}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Total patients</div>
+        <div class="stat-val">{{ nb_patients }}</div>
+        <div class="stat-sub">Inscrits sur la plateforme</div>
+      </div>
+      <div class="stat ok">
+        <div class="stat-lbl">Actifs cette semaine</div>
+        <div class="stat-val">{{ patients|selectattr('mesures_semaine','gt',0)|list|length }}</div>
+        <div class="stat-sub" style="color:var(--green)">Ont saisi des mesures</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Taux d'adoption</div>
+        <div class="stat-val">{{ ((patients|selectattr('mesures_semaine','gt',0)|list|length / nb_patients * 100)|round|int if nb_patients > 0 else 0) }}%</div>
+        <div class="stat-sub">Objectif : 60%</div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-h"><h2>Patients — par priorité</h2><a href="/medecin/patients" class="btn btn-o btn-sm">Tous voir</a></div>
+        {% for p in patients[:6] %}
+        <a href="/medecin/patient/{{ p.id }}" style="display:block">
+          <div class="pat-row {{ 'alert' if p.last_statut in ['critique','elevee'] else '' }}">
+            <div class="avatar {{ 'red' if p.last_statut in ['critique','elevee'] else '' }}">{{ p.prenom[0] }}{{ p.nom[0] }}</div>
+            <div class="pat-info">
+              <div class="pat-name">{{ p.prenom }} {{ p.nom }}</div>
+              <div class="pat-sub">{{ p.pathologie or 'Pathologie non précisée' }}</div>
+            </div>
+            <div class="pat-val">
+              {% if p.last_sys %}
+              <div class="pat-m {{ 'c-r' if p.last_statut in ['critique','elevee'] else 'c-ok' }}">{{ p.last_sys }}/{{ p.last_dia }}</div>
+              {% else %}<div class="pat-m" style="color:var(--gray)">—</div>{% endif %}
+              <div class="pat-d">{{ p.last_date or 'Aucune mesure' }}</div>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+        {% if not patients %}<div style="text-align:center;padding:2rem;color:var(--gray)">Aucun patient inscrit pour le moment.</div>{% endif %}
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Alertes récentes</h2><a href="/medecin/alertes" class="btn btn-o btn-sm">Toutes</a></div>
+        {% for a in alertes[:4] %}
+        <div class="notif notif-r" style="margin-bottom:0.5rem">
+          <div class="notif-ico"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="notif-b">
+            <div class="notif-t">{{ a.prenom }} {{ a.nom }}</div>
+            <div class="notif-d">{{ a.type_alerte|capitalize }} : {{ a.valeur }} (seuil : {{ a.seuil }})</div>
+          </div>
+          <form method="POST" action="/medecin/alerte/{{ a.id }}/traiter"><button type="submit" class="btn btn-sm btn-o" style="flex-shrink:0;color:var(--green);border-color:var(--green);display:inline-flex;align-items:center;gap:0.3rem"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Traité</button></form>
+        </div>
+        {% endfor %}
+        {% if not alertes %}<div style="text-align:center;padding:2rem;color:var(--gray);display:flex;align-items:center;justify-content:center;gap:0.4rem"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Aucune alerte active.</div>{% endif %}
+        <div class="sep"></div>
+        <div class="card-h"><h2>Indicateurs de la semaine</h2></div>
+        <div class="pb-wrap"><div class="pb-head"><span>Alertes traitées</span><span style="font-weight:600;color:var(--mint)">94%</span></div><div class="pb"><div class="pb-fill" style="width:94%"></div></div></div>
+        <div class="pb-wrap"><div class="pb-head"><span>Taux de saisie patients</span><span style="font-weight:600;color:var(--green)">{{ ((patients|selectattr('mesures_semaine','gt',0)|list|length / nb_patients * 100)|round|int if nb_patients > 0 else 0) }}%</span></div><div class="pb"><div class="pb-fill ok" style="width:{{ (patients|selectattr('mesures_semaine','gt',0)|list|length / nb_patients * 100)|round|int if nb_patients > 0 else 0 }}%"></div></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

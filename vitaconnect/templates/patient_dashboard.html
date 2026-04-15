@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord — VitaConnect{% endblock %}
+{% block body %}
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-name">Vita<span>Connect</span></div>
+      <div class="sb-role">Espace Patient</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-lbl">Menu</div>
+      <a class="nav-item active" href="/patient">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Tableau de bord
+      </a>
+      <a class="nav-item" href="/patient/saisir">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Saisir mes mesures
+      </a>
+      <a class="nav-item" href="/patient/historique">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Mon historique
+      </a>
+      <a class="nav-item" href="/patient/messages">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Messages
+        {% if nb_messages > 0 %}<span class="badge b-r" style="margin-left:auto">{{ nb_messages }}</span>{% endif %}
+      </a>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-user">{{ session.nom }}</div>
+      <div class="sb-user-sub">{{ patient.pathologie or 'Patient' }}</div>
+      <a class="logout" href="/logout">Déconnexion</a>
+    </div>
+  </aside>
+
+  <main class="main fade">
+    <div class="ph">
+      <h1>Bonjour, {{ patient.prenom }}</h1>
+      <p>Voici votre état de santé du jour</p>
+    </div>
+
+    {% if not derniere %}
+    <div class="notif notif-g" style="margin-bottom:1.5rem">
+      <div class="notif-ico"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.5 20.5L3.5 13.5a5.12 5.12 0 017.24-7.24L17.76 13.26a5.12 5.12 0 01-7.24 7.24z"/><line x1="8.5" y1="11.5" x2="15.5" y2="14.5"/></svg></div>
+      <div class="notif-b">
+        <div class="notif-t">Première saisie</div>
+        <div class="notif-d">Vous n'avez pas encore saisi de mesures. Commencez maintenant — ça prend moins de 30 secondes.</div>
+      </div>
+      <a href="/patient/saisir" class="btn btn-p btn-sm" style="flex-shrink:0">Saisir →</a>
+    </div>
+    {% endif %}
+
+    <div class="g4">
+      <div class="stat ok">
+        <div class="stat-lbl">Dernière tension</div>
+        {% if derniere and derniere.tension_sys %}
+          <div class="stat-val" style="font-size:1.6rem">{{ derniere.tension_sys }}/{{ derniere.tension_dia }}</div>
+          <div class="stat-sub" style="color:var(--{{ 'red' if derniere.statut in ['critique','elevee'] else 'green' }})">
+            {{ 'Élevée' if derniere.statut in ['critique','elevee'] else 'Normale' }} · {{ derniere.date_mesure }}
+          </div>
+        {% else %}
+          <div class="stat-val" style="font-size:1.2rem;margin-top:0.3rem">—</div>
+          <div class="stat-sub">Aucune mesure</div>
+        {% endif %}
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Mesures ce mois</div>
+        <div class="stat-val">{{ nb_mesures_mois }}</div>
+        <div class="stat-sub">sur 30 jours</div>
+      </div>
+      <div class="stat ok">
+        <div class="stat-lbl">Mon médecin</div>
+        {% if medecin %}
+          <div class="stat-val" style="font-size:1rem;margin-top:0.4rem">Dr. {{ medecin.nom }}</div>
+          <div class="stat-sub">{{ medecin.specialite }}</div>
+        {% else %}
+          <div class="stat-val" style="font-size:1rem;margin-top:0.4rem">—</div>
+          <div class="stat-sub">Non assigné</div>
+        {% endif %}
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Messages non lus</div>
+        <div class="stat-val {% if nb_messages > 0 %}c-r{% endif %}">{{ nb_messages }}</div>
+        <div class="stat-sub"><a href="/patient/messages" style="color:var(--mint)">Voir les messages →</a></div>
+      </div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-h">
+          <h2>Mes dernières mesures</h2>
+          <a href="/patient/historique" class="btn btn-o btn-sm">Tout voir</a>
+        </div>
+        {% if mesures_semaine %}
+        <div class="tw">
+          <table>
+            <thead><tr><th>Date</th><th>Tension</th><th>Pouls</th><th>Statut</th></tr></thead>
+            <tbody>
+              {% for m in mesures_semaine %}
+              <tr>
+                <td>{{ m.date_mesure }} {{ m.heure_mesure }}</td>
+                <td>{% if m.tension_sys %}{{ m.tension_sys }}/{{ m.tension_dia }} mmHg{% else %}—{% endif %}</td>
+                <td>{{ m.pouls or '—' }}</td>
+                <td>
+                  {% if m.statut == 'normale' %}<span class="badge b-g">Normale</span>
+                  {% elif m.statut in ['critique','elevee'] %}<span class="badge b-r">Élevée</span>
+                  {% else %}<span class="badge b-a">À surveiller</span>{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:2rem;color:var(--gray)">Aucune mesure enregistrée.<br><a href="/patient/saisir" style="color:var(--mint)">Saisir ma première mesure →</a></div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h2>Action rapide</h2></div>
+        <a href="/patient/saisir" class="btn btn-p btn-full" style="margin-bottom:0.75rem">+ Saisir mes mesures du jour</a>
+        <a href="/patient/messages" class="btn btn-o btn-full"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Envoyer un message à mon médecin</a>
+        {% if derniere %}
+        <div class="sep"></div>
+        <div class="stat-lbl" style="margin-bottom:0.75rem">Ma dernière mesure</div>
+        {% if derniere.statut == 'normale' %}
+        <div class="status-ok"><div class="st-ico"><svg width="28" height="28" fill="none" stroke="var(--green)" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="st-txt">Tension normale</div><div class="st-sub">Vos valeurs sont dans les seuils recommandés.</div></div>
+        {% elif derniere.statut in ['critique','elevee'] %}
+        <div class="status-hi"><div class="st-ico"><svg width="28" height="28" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="st-txt">Tension élevée</div><div class="st-sub">Votre médecin a été informé automatiquement.</div></div>
+        {% else %}
+        <div class="status-wa"><div class="st-ico"><svg width="28" height="28" fill="none" stroke="#E9A84A" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="st-txt">Valeur limite</div><div class="st-sub">Continuez à surveiller et reposez-vous.</div></div>
+        {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

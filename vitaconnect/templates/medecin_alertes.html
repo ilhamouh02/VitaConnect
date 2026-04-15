@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Alertes — VitaConnect{% endblock %}
+{% block body %}
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sb-brand"><div class="sb-name">Vita<span>Connect</span></div><div class="sb-role">Espace Médecin</div></div>
+    <nav class="nav">
+      <a class="nav-item" href="/medecin"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Tableau de bord</a>
+      <a class="nav-item" href="/medecin/patients"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Mes patients</a>
+      <a class="nav-item active" href="/medecin/alertes"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>Alertes</a>
+      <a class="nav-item" href="/medecin/messages"><svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Messages</a>
+    </nav>
+    <div class="sb-foot"><div class="sb-user">{{ session.nom }}</div><a class="logout" href="/logout">Déconnexion</a></div>
+  </aside>
+  <main class="main fade">
+    <div class="ph"><h1>Alertes</h1><p>Suivi des valeurs anormales de vos patients</p></div>
+    {% with messages = get_flashed_messages(with_categories=true) %}{% for cat, msg in messages %}<div class="flash flash-s">{{ msg }}</div>{% endfor %}{% endwith %}
+    {% for a in alertes %}
+    <div class="card" style="border:{{ '2px solid var(--red)' if not a.traitee else '1px solid var(--gray-light)' }};opacity:{{ '1' if not a.traitee else '0.65' }}">
+      <div style="display:flex;align-items:flex-start;gap:1rem">
+        <div class="avatar {{ 'red' if not a.traitee else '' }}">{{ a.prenom[0] }}{{ a.nom[0] }}</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.35rem">
+            <strong style="font-size:1rem">{{ a.prenom }} {{ a.nom }}</strong>
+            {% if not a.traitee %}<span class="badge b-r" style="display:inline-flex;align-items:center;gap:0.25rem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Active</span>{% else %}<span class="badge b-g" style="display:inline-flex;align-items:center;gap:0.25rem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Traitée</span>{% endif %}
+          </div>
+          <div style="font-size:0.82rem;color:var(--gray);margin-bottom:0.75rem">{{ a.pathologie }} · {{ a.date_alerte[:16] }}</div>
+          <div style="background:{{ 'var(--red-light)' if not a.traitee else 'var(--cream)' }};border-radius:10px;padding:1rem;margin-bottom:0.75rem">
+            <div style="font-size:0.72rem;font-weight:600;color:{{ 'var(--red)' if not a.traitee else 'var(--gray)' }};letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.35rem">{{ a.type_alerte|capitalize }}</div>
+            <div style="font-family:var(--font-d);font-size:2rem;color:{{ 'var(--red)' if not a.traitee else 'var(--ink)' }};font-weight:700">{{ a.valeur }}</div>
+            <div style="font-size:0.82rem;color:var(--gray);margin-top:0.2rem">Seuil défini : {{ a.seuil }}</div>
+            {% if a.message %}<div style="font-size:0.82rem;color:var(--ink);margin-top:0.4rem;font-style:italic">{{ a.message }}</div>{% endif %}
+          </div>
+          {% if not a.traitee %}
+          <div style="display:flex;gap:0.65rem;align-items:center">
+            <a href="/medecin/patient/{{ a.pat_id }}" class="btn btn-p btn-sm">Voir le dossier patient</a>
+            <a href="/medecin/messages?patient={{ a.pat_id }}" class="btn btn-o btn-sm">Envoyer un message</a>
+            <form method="POST" action="/medecin/alerte/{{ a.id }}/traiter" style="margin-left:auto">
+              <button type="submit" class="btn btn-sm" style="color:var(--green);border:1.5px solid var(--green);background:transparent;display:inline-flex;align-items:center;gap:0.3rem"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Marquer comme traitée</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% if not alertes %}<div class="card" style="text-align:center;padding:3rem"><div style="margin-bottom:0.75rem;display:flex;justify-content:center"><svg width="40" height="40" fill="none" stroke="var(--green)" stroke-width="1.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div style="font-weight:600;margin-bottom:0.35rem">Aucune alerte active</div><div style="font-size:0.87rem;color:var(--gray)">Tous vos patients ont des valeurs dans les seuils normaux.</div></div>{% endif %}
+  </main>
+</div>
+{% endblock %}

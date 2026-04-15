@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VitaConnect — Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#1C2B2D;--mint:#2A9D8F;--mint-light:#E8F5F3;--paper:#F4F0EA;--cream:#FAF7F2;--white:#fff;--gray:#8A9BA0;--gray-light:#D8E0E2;--red:#C8502A;--font-d:'Playfair Display',Georgia,serif;--font-b:'DM Sans',system-ui,sans-serif; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-b);background:var(--cream);color:var(--ink);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.card{background:var(--white);border:1px solid var(--gray-light);border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(28,43,45,0.10)}
+.logo{display:flex;align-items:center;gap:0.6rem;justify-content:center;margin-bottom:2rem}
+.logo-icon{width:36px;height:36px;background:var(--ink);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{color:var(--mint)}
+.logo-text{font-family:var(--font-d);font-size:1.6rem;color:var(--ink)}
+.logo-text span{color:var(--mint)}
+.login-title{font-family:var(--font-d);font-size:1.5rem;margin-bottom:1.75rem;text-align:center}
+.fl{font-size:0.74rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:var(--gray);margin-bottom:0.35rem;display:block}
+.fi{width:100%;padding:0.75rem 1rem;border:1.5px solid var(--gray-light);border-radius:8px;font-family:var(--font-b);font-size:0.92rem;color:var(--ink);background:var(--white);margin-bottom:1.1rem;transition:border-color 0.2s}
+.fi:focus{outline:none;border-color:var(--mint)}
+.btn-p{display:block;width:100%;padding:0.8rem;background:var(--mint);color:#fff;border:none;border-radius:8px;font-family:var(--font-b);font-size:0.95rem;font-weight:600;cursor:pointer;margin-bottom:1rem;transition:background 0.2s;text-align:center}
+.btn-p:hover{background:#238a7c}
+.quick{margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--gray-light)}
+.quick-lbl{font-size:0.8rem;color:var(--gray);text-align:center;margin-bottom:0.65rem}
+.quick-btns{display:flex;gap:0.5rem}
+.qb{flex:1;padding:0.6rem;text-align:center;border:1px solid var(--gray-light);border-radius:7px;cursor:pointer;font-size:0.82rem;background:var(--white);color:var(--ink);transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:0.3rem;font-family:var(--font-b);width:100%}
+.qb:hover{border-color:var(--mint);color:var(--mint);background:var(--mint-light)}
+.qb svg{color:var(--gray);transition:color 0.15s}
+.qb:hover svg{color:var(--mint)}
+.flash{padding:0.7rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.87rem;font-weight:500}
+.flash-e{background:#FBF0EC;border:1px solid var(--red);color:var(--red)}
+.flash-s{background:#E8F5F0;border:1px solid #2A7A5E;color:#2A7A5E}
+.reg-link{text-align:center;margin-top:0.75rem;font-size:0.85rem;color:var(--gray)}
+.reg-link a{color:var(--mint);font-weight:500}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <div class="logo-text">Vita<span>Connect</span></div>
+  </div>
+
+  <div class="login-title">Connexion</div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="flash flash-{{ 's' if cat == 'success' else 'e' }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST">
+    <label class="fl">Adresse e-mail</label>
+    <input class="fi" type="email" name="email" placeholder="email@exemple.fr" required>
+    <label class="fl">Mot de passe</label>
+    <input class="fi" type="password" name="password" placeholder="••••••••" required>
+    <button type="submit" class="btn-p">Se connecter</button>
+  </form>
+
+  <div class="quick">
+    <div class="quick-lbl">Accès rapide — démonstration</div>
+    <div class="quick-btns">
+      <form method="POST" style="flex:1">
+        <input type="hidden" name="email" value="lyly@vitaconnect.fr">
+        <input type="hidden" name="password" value="demo123">
+        <button type="submit" class="qb">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Lyly<br><small>Patient</small>
+        </button>
+      </form>
+      <form method="POST" style="flex:1">
+        <input type="hidden" name="email" value="ouhimmou@vitaconnect.fr">
+        <input type="hidden" name="password" value="demo123">
+        <button type="submit" class="qb">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Dr. Ouhimmou<br><small>Médecin</small>
+        </button>
+      </form>
+    </div>
+  </div>
+  <div class="reg-link">Pas encore de compte ? <a href="/inscription">Créer un compte</a></div>
+</div>
+</body>
+</html>
